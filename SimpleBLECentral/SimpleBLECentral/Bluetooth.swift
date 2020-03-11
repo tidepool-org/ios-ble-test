@@ -117,14 +117,14 @@ extension Bluetooth: CBCentralManagerDelegate {
     }
     
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
-        Logger.instance.output("\(#function): Peripheral: \(peripheral.state)")
+        Logger.instance.output("Peripheral: \(peripheral.state)")
         delegate?.connectedUpdated(value: true)
         peripheral.discoverServices(serviceCBUUIDs)
         //        peripheral.discoverServices(nil)
     }
     
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
-        Logger.instance.output("\(#function): Peripheral: \(peripheral.state)")
+        Logger.instance.output("Peripheral: \(peripheral.state)")
         delegate?.connectedUpdated(value: false)
         self.peripheral = nil
     }
