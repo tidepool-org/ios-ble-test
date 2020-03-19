@@ -11,13 +11,18 @@ import os.log
 class Logger {
     static public let instance = Logger()
     private let log = OSLog(category: "SimpleBLECentral")
+    static public var prefixFunc: () -> String = { return "" }
     
     func output(_ message: String, function: StaticString = #function) {
-        log.default("%{public}@: %{public}@", function.description, message)
+        logEntry(log.default, message, function)
     }
     
     func error(_ message: String, function: StaticString = #function) {
-        log.error("%{public}@: %{public}@", function.description, message)
+        logEntry(log.error, message, function)
+    }
+    
+    private func logEntry(_ logFunc: (_ message: StaticString, _ args: CVarArg...) -> Void, _ message: String, _ function: StaticString) {
+        logFunc("%{public}@%{public}@: %{public}@", Logger.prefixFunc(), function.description, message)
     }
 }
 
