@@ -13,6 +13,7 @@ let myCustomServiceID = CBUUID(string: "623B9814-B2EA-4E78-ABE8-CC9D1D76A836")
 let myCustomCharacteristicID = CBUUID(string: "32745B79-D94C-4879-B063-AA3323EBBCC6")
 
 let serviceCBUUIDs = [myCustomServiceID]
+let autoConnectAfterDisconnect = false
 
 protocol BluetoothDelegate: class {
     func connectedUpdated(value: Bool)
@@ -53,6 +54,7 @@ class Bluetooth: NSObject {
     init(delegate: BluetoothDelegate?) {
         self.delegate = delegate
         super.init()
+    
         centralManager = CBCentralManager(delegate: self, queue: nil,
                                           options: [ CBCentralManagerOptionRestoreIdentifierKey: "SimpleBLECentralID" ])
         NotificationCenter.default.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: nil) {_ in
@@ -128,6 +130,9 @@ extension Bluetooth: CBCentralManagerDelegate {
         Logger.instance.output("Peripheral: \(peripheral.state)")
         delegate?.connectedUpdated(value: false)
         self.peripheral = nil
+        if autoConnectAfterDisconnect {
+            connect()
+        }
     }
     
     func centralManager(_ central: CBCentralManager, willRestoreState dict: [String : Any]) {
