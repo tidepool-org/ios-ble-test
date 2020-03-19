@@ -12,6 +12,7 @@ struct BLEState: Identifiable {
     var id = UUID()
     var counter = 0
     var connected = false
+    var isScanning = false
 }
 
 final class ViewModel: ObservableObject {
@@ -28,8 +29,11 @@ extension ViewModel: BluetoothDelegate {
         state.connected = value
     }
     
-    func valueUpdate(value: Int) {
+    func valueUpdated(value: Int) {
         state.counter = value
+    }
+    func scanningUpdated(value: Bool) {
+        state.isScanning = value
     }
 }
 
@@ -67,6 +71,7 @@ struct ContentView: View {
                 }
                 .disabled(!viewModel.state.connected)
             }
+            ActivityIndicator(isAnimating: $viewModel.state.isScanning, style: .large)
         }
     }
 }
@@ -76,3 +81,19 @@ struct ContentView_Previews: PreviewProvider {
         ContentView()
     }
 }
+
+
+struct ActivityIndicator: UIViewRepresentable {
+
+    @Binding var isAnimating: Bool
+    let style: UIActivityIndicatorView.Style
+
+    func makeUIView(context: UIViewRepresentableContext<ActivityIndicator>) -> UIActivityIndicatorView {
+        return UIActivityIndicatorView(style: style)
+    }
+
+    func updateUIView(_ uiView: UIActivityIndicatorView, context: UIViewRepresentableContext<ActivityIndicator>) {
+        isAnimating ? uiView.startAnimating() : uiView.stopAnimating()
+    }
+}
+

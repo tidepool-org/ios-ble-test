@@ -16,7 +16,8 @@ let serviceCBUUIDs = [myCustomServiceID]
 
 protocol BluetoothDelegate: class {
     func connectedUpdated(value: Bool)
-    func valueUpdate(value: Int)
+    func valueUpdated(value: Int)
+    func scanningUpdated(value: Bool)
 }
 
 class Bluetooth: NSObject {
@@ -175,6 +176,7 @@ extension Bluetooth: CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
         //        Logger.instance.output("Updated value for \(characteristic.uuid): \(String(describing: characteristic.value))")
         guard characteristic.uuid == myCustomCharacteristicID else {
+            Logger.instance.error("Updated unknown Characteristic \(characteristic)")
             return
         }
         let value = characteristic.value?.withUnsafeBytes { $0.bindMemory(to: Int.self)[0] }
@@ -184,7 +186,7 @@ extension Bluetooth: CBPeripheralDelegate {
         }
         Logger.instance.output("Counter is \(counter)")
         miscData = "\(counter)"
-        delegate?.valueUpdate(value: counter)
+        delegate?.valueUpdated(value: counter)
     }
 }
 
@@ -197,6 +199,7 @@ extension Bluetooth {
         Logger.instance.output("")
         scanStart = Date()
         centralManager.scanForPeripherals(withServices: serviceCBUUIDs)
+        delegate?.scanningUpdated(value: true)
     }
     
     private func connect(to peripheral: CBPeripheral) {
@@ -204,6 +207,7 @@ extension Bluetooth {
             guard let strongSelf = self else { return }
             if strongSelf.centralManager.isScanning {
                 strongSelf.centralManager.stopScan()
+                strongSelf.delegate?.scanningUpdated(value: false)
             }
             strongSelf.peripheral = peripheral
             strongSelf.peripheral?.delegate = self
