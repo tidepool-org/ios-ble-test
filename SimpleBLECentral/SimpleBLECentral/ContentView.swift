@@ -55,6 +55,7 @@ struct ContentView: View {
                 .font(.title)
                 .foregroundColor(ContentView.colors[index])
                 .onTapGesture {
+//                    boink()
                     self.index = (self.index + 1) % ContentView.colors.count
             }
             HStack(spacing: 120.0) {

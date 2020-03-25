@@ -9,11 +9,14 @@
 import CoreBluetooth
 import UIKit
 
+let dexcomServiceCBUUID = CBUUID(string: "0xFEBC")
+
 let myCustomServiceID = CBUUID(string: "623B9814-B2EA-4E78-ABE8-CC9D1D76A836")
 let myCustomCharacteristicID = CBUUID(string: "32745B79-D94C-4879-B063-AA3323EBBCC6")
 
-let serviceCBUUIDs = [myCustomServiceID]
-let autoConnectAfterDisconnect = false
+//let serviceCBUUIDs = [myCustomServiceID]
+let serviceCBUUIDs = [dexcomServiceCBUUID]
+let autoConnectAfterDisconnect = true
 
 protocol BluetoothDelegate: class {
     func connectedUpdated(value: Bool)
@@ -139,6 +142,9 @@ extension Bluetooth: CBCentralManagerDelegate {
         defer {
             dump()
         }
+
+        Logger.instance.output("\(dict)")
+        
         guard let peripheralsConnectedToPreviously = dict[ CBCentralManagerRestoredStatePeripheralsKey ] as? [CBPeripheral] else {
             Logger.instance.output("No restored peripherals")
             return

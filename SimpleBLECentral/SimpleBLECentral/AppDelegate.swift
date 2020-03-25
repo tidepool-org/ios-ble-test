@@ -6,11 +6,16 @@
 //  Copyright © 2020 Rick Pasetto. All rights reserved.
 //
 
+import UserNotifications
 import UIKit
+
+let notificationWait: TimeInterval = 0.5
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
-        
+    
+    let notificationCenter = UNUserNotificationCenter.current()
+
     private var isAfterFirstUnlock: Bool {
         let fileManager = FileManager.default
         do {
@@ -19,6 +24,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             guard fileManager.fileExists(atPath: fileURL.path) else {
                 let contents = Data("unimportant".utf8)
                 do {
+                    Logger.instance.output("\(fileURL.path) does not exist")
                     try contents.write(to: fileURL, options: .completeFileProtectionUntilFirstUserAuthentication)
                     // If file doesn't exist, we're at first start, which will be user directed.
                     return true
@@ -29,6 +35,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
             do {
                 let data = try Data(contentsOf: fileURL)
+                Logger.instance.output("\(fileURL.path) data read count = \(data.count)")
                 if data.count == 0 {
                     Logger.instance.error("Something is wrong: \(fileURL) is empty")
                     fatalError("Something is wrong: \(fileURL) is empty")
@@ -69,6 +76,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             }
         }
         
+        let options: UNAuthorizationOptions = [.alert, .sound, .badge]
+        notificationCenter.requestAuthorization(options: options) {
+            (didAllow, error) in
+            if !didAllow {
+                Logger.instance.error("User has declined notifications")
+            }
+        }
+
+        notificationCenter.delegate = self
+        
         return true
     }
     
@@ -86,9 +103,49 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
     }
     
-    
+    func applicationWillTerminate(_ application: UIApplication) {
+        notifyQuit()
+        Logger.instance.output("")
+    }
 }
 
+extension AppDelegate: UNUserNotificationCenterDelegate {
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.alert, .sound])
+    }
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        completionHandler()
+    }
+
+}
+
+
+func boink() {
+    notify(title: "SimpleBLECentral boink", body: "boink!")
+}
+
+func notifyQuit() {
+    notify(title: "SimpleBLECentral QUIT", body: "quit!")
+}
+
+func notify(title: String, body: String) {
+    let content = UNMutableNotificationContent()
+    content.title = title
+    content.body = body
+    content.sound = .default
+    UNUserNotificationCenter.current().add(
+        UNNotificationRequest(identifier: title,
+                              content: content,
+                              trigger: nil//UNTimeIntervalNotificationTrigger(timeInterval: notificationWait, repeats: false)
+        ), withCompletionHandler: { x in
+            DispatchQueue.main.async {
+                Logger.instance.output("\(title) \"\(body)\" \(String(describing: x))")
+            }
+    })
+}
 
 func dump() {
     UserDefaults.standard.dictionaryRepresentation()
